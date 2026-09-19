@@ -1,0 +1,36 @@
+# Spring Initializr generated help file
+**/HELP.md
+
+# Build outputs
+**/target/
+**/build/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Maven wrapper jar (downloaded on first run)
+**/.mvn/wrapper/maven-wrapper.jar
+
+### IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs / env ###
+*.log
+.env
+
+### Local-only notes ###
+CLAUDE.md
