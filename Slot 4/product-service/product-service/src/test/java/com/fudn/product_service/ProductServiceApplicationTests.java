@@ -1,75 +1,64 @@
 package com.fudn.product_service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fudn.product_service.dto.ProductRequest;
-import com.fudn.product_service.repository.IProductRepository;
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fudn.product_service.dto.ProductRequest;
+import com.fudn.product_service.repository.IProductRepository;
+
+@Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 @AutoConfigureMockMvc
 class ProductServiceApplicationTests {
 
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.5");
+	@Autowired
+	MockMvc mockMvc;
 
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
+	@Autowired
+	IProductRepository productRepository;
 
-    @Autowired
-    MockMvc mockMvc;
+	@Autowired
+	ObjectMapper objectMapper;
 
-    @Autowired
-    IProductRepository productRepository;
+	@BeforeEach
+	void cleanup() {
+		productRepository.deleteAll();
+	}
 
-    @Autowired
-    ObjectMapper objectMapper;
+	@Test
+	void shouldCreateProduct() throws Exception {
+		ProductRequest productRequest = new ProductRequest(
+				"Test Product",
+				"This is a test product",
+				BigDecimal.valueOf(19.99));
 
-    @BeforeEach
-    void cleanup() {
-        productRepository.deleteAll();
-    }
+		mockMvc.perform(post("/api/products")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(productRequest)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id").isNotEmpty())
+				.andExpect(jsonPath("$.name").value("Test Product"))
+				.andExpect(jsonPath("$.description").value("This is a test product"))
+				.andExpect(jsonPath("$.price").value(19.99));
 
-    @Test
-    void shouldCreateProduct() throws Exception {
-        ProductRequest productRequest = ProductRequest.builder()
-                .name("Test Product")
-                .description("This is a test product")
-                .price(BigDecimal.valueOf(19.99))
-                .build();
+		assertThat(productRepository.findAll()).hasSize(1);
+	}
 
-        mockMvc.perform(post("/api/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.name").value("Test Product"))
-                .andExpect(jsonPath("$.description").value("This is a test product"))
-                .andExpect(jsonPath("$.price").value(19.99));
+	@Test
+	void contextLoads() {
+	}
 
-        assertThat(productRepository.findAll()).hasSize(1);
-    }
-
-    @Test
-    void contextLoads() {
-    }
 }

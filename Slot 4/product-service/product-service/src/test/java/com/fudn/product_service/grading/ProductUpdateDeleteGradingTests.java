@@ -11,13 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -28,6 +24,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fudn.product_service.TestcontainersConfiguration;
 
 /**
  * AUTOGRADING TESTS — Chấm điểm tự động cho 2 chức năng:
@@ -49,18 +47,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *   - DELETE: 5.0 điểm  (3 test)
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+@Import(TestcontainersConfiguration.class)
 @AutoConfigureMockMvc
 @ExtendWith(GradingExtension.class)
 class ProductUpdateDeleteGradingTests {
-
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.5");
-
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
 
     @Autowired
     MockMvc mockMvc;
@@ -96,11 +86,10 @@ class ProductUpdateDeleteGradingTests {
     void updateShouldReturn200WithUpdatedBody() throws Exception {
         Product existing = seedProduct();
 
-        ProductRequest update = ProductRequest.builder()
-                .name("iPhone 15 Pro")
-                .description("Updated description")
-                .price(new BigDecimal("1199.99"))
-                .build();
+        ProductRequest update = new ProductRequest(
+                "iPhone 15 Pro",
+                "Updated description",
+                new BigDecimal("1199.99"));
 
         mockMvc.perform(put("/api/products/" + existing.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -118,11 +107,10 @@ class ProductUpdateDeleteGradingTests {
     void updateShouldPersistChangesToDatabase() throws Exception {
         Product existing = seedProduct();
 
-        ProductRequest update = ProductRequest.builder()
-                .name("Samsung Galaxy S24")
-                .description("Android flagship")
-                .price(new BigDecimal("899.00"))
-                .build();
+        ProductRequest update = new ProductRequest(
+                "Samsung Galaxy S24",
+                "Android flagship",
+                new BigDecimal("899.00"));
 
         mockMvc.perform(put("/api/products/" + existing.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -144,11 +132,10 @@ class ProductUpdateDeleteGradingTests {
     @DisplayName("UPDATE-3: Update id không tồn tại trả về 404")
     @Points(value = 1.0, description = "UPDATE - 404 khi id không tồn tại")
     void updateShouldReturn404WhenProductNotFound() throws Exception {
-        ProductRequest update = ProductRequest.builder()
-                .name("Ghost")
-                .description("does not exist")
-                .price(new BigDecimal("1.00"))
-                .build();
+        ProductRequest update = new ProductRequest(
+                "Ghost",
+                "does not exist",
+                new BigDecimal("1.00"));
 
         mockMvc.perform(put("/api/products/non-existing-id-xyz")
                         .contentType(MediaType.APPLICATION_JSON)
