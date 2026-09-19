@@ -34,3 +34,6 @@ Thumbs.db
 
 ### Local-only notes ###
 CLAUDE.md
+
+### Postman collections/environments (generated, local-only) ###
+**/postman/
