@@ -1,4 +1,4 @@
-package com.fudn.productservice;
+package com.fudn.product_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,8 +1,8 @@
-package com.fudn.productservice.repository;
+package com.fudn.product_service.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import com.fudn.productservice.model.Product;
+import com.fudn.product_service.model.Product;
 
 public interface ProductRepository extends MongoRepository<Product, String> {
 }

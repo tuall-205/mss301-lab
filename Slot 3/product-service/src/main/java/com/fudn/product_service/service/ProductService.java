@@ -1,13 +1,13 @@
-package com.fudn.productservice.service;
+package com.fudn.product_service.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.fudn.productservice.dto.ProductRequest;
-import com.fudn.productservice.dto.ProductResponse;
-import com.fudn.productservice.model.Product;
-import com.fudn.productservice.repository.ProductRepository;
+import com.fudn.product_service.dto.ProductRequest;
+import com.fudn.product_service.dto.ProductResponse;
+import com.fudn.product_service.model.Product;
+import com.fudn.product_service.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.fudn.productservice;
+package com.fudn.product_service;
 
 import java.math.BigDecimal;
 
@@ -16,8 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.testcontainers.utility.TestcontainersConfiguration;
 
-import com.fudn.productservice.dto.ProductRequest;
-import com.fudn.productservice.repository.ProductRepository;
+import com.fudn.product_service.dto.ProductRequest;
+import com.fudn.product_service.repository.ProductRepository;
 
 import tools.jackson.databind.ObjectMapper;
 

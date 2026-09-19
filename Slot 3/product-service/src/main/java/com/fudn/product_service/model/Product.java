@@ -1,4 +1,4 @@
-package com.fudn.productservice.model;
+package com.fudn.product_service.model;
 
 import java.math.BigDecimal;
 

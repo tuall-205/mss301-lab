@@ -1,4 +1,4 @@
-package com.fudn.productservice.controller;
+package com.fudn.product_service.controller;
 
 import java.util.List;
 
@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fudn.productservice.dto.ProductRequest;
-import com.fudn.productservice.dto.ProductResponse;
-import com.fudn.productservice.service.ProductService;
+import com.fudn.product_service.dto.ProductRequest;
+import com.fudn.product_service.dto.ProductResponse;
+import com.fudn.product_service.service.ProductService;
 
 import lombok.RequiredArgsConstructor;
 
