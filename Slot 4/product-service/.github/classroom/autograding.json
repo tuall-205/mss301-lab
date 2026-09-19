@@ -1,0 +1,64 @@
+{
+  "tests": [
+    {
+      "name": "UPDATE-1: Trả về 200 + body đúng",
+      "setup": "",
+      "run": "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#updateShouldReturn200WithUpdatedBody test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 2
+    },
+    {
+      "name": "UPDATE-2: Lưu thật vào DB",
+      "setup": "",
+      "run": "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#updateShouldPersistChangesToDatabase test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 2
+    },
+    {
+      "name": "UPDATE-3: 404 khi không tồn tại",
+      "setup": "",
+      "run": "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#updateShouldReturn404WhenProductNotFound test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 1
+    },
+    {
+      "name": "DELETE-1: Trả về 204/200",
+      "setup": "",
+      "run": "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#deleteShouldReturnNoContent test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 2
+    },
+    {
+      "name": "DELETE-2: Xoá khỏi DB",
+      "setup": "",
+      "run": "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#deleteShouldRemoveProductFromDatabase test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 2
+    },
+    {
+      "name": "DELETE-3: 404 khi không tồn tại",
+      "setup": "",
+      "run": "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#deleteShouldReturn404WhenProductNotFound test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 1
+    }
+  ]
+}
