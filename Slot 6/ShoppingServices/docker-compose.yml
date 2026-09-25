@@ -1,4 +1,7 @@
+version: '3.8'
+
 services:
+  # MongoDB for product-service (port 27017)
   mongodb:
     image: mongo:7.0.5
     container_name: mongodb
@@ -10,9 +13,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: product-service
     volumes:
-      - mongo-data:/data/db          # giữ data khi restart container
+      - mongo-data:/data/db
 
-  # (khuyến nghị) UI xem dữ liệu Mongo trên trình duyệt
+  # Mongo Express UI for product-service (port 8085 to avoid conflict with microservices ports 8080, 8081, 8082)
   mongo-express:
     image: mongo-express:1.0
     container_name: mongo-express
@@ -27,5 +30,19 @@ services:
       ME_CONFIG_MONGODB_SERVER: mongodb
       ME_CONFIG_BASICAUTH: false
 
+  # MySQL for order-service & inventory-service (port 3306)
+  mysql:
+    image: mysql:8.3.0
+    container_name: mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+    volumes:
+      - ./order-service/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql-data:/var/lib/mysql
+
 volumes:
   mongo-data:
+  mysql-data:
