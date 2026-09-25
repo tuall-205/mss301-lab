@@ -1,40 +1,28 @@
 package com.fudn.orderservice;
 
-import com.fudn.orderservice.stub.InventoryStubs;
-import io.restassured.RestAssured;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.testcontainers.containers.MySQLContainer;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import com.fudn.orderservice.stub.InventoryStubs;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import io.restassured.RestAssured;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWireMock(port = 0)
 class OrderServiceApplicationTests {
 
     @ServiceConnection
     static MySQLContainer mySQLContainer = new MySQLContainer("mysql:8.3.0");
 
-    static WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
-
     static {
-        wireMockServer.start();
         mySQLContainer.start();
-    }
-
-    @DynamicPropertySource
-    static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-        registry.add("inventory.url", () -> "http://localhost:" + wireMockServer.port());
     }
 
     @LocalServerPort
@@ -42,7 +30,6 @@ class OrderServiceApplicationTests {
 
     @BeforeEach
     void setup() {
-        configureFor("localhost", wireMockServer.port());
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
     }
@@ -70,10 +57,5 @@ class OrderServiceApplicationTests {
                 .extract().body().asString();
 
         assertThat(responseBodyString, Matchers.is("Order Placed Successfully"));
-    }
-
-    @AfterAll
-    static void stopWireMock() {
-        wireMockServer.stop();
     }
 }
