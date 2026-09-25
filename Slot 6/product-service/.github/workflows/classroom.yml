@@ -1,0 +1,124 @@
+name: GitHub Classroom Autograding
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  autograde:
+    name: Autograding
+    runs-on: ubuntu-latest
+    # bỏ qua khi chính bot Classroom tạo repo lần đầu
+    if: github.actor != 'github-classroom[bot]'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Make mvnw executable
+        run: chmod +x product-service/mvnw
+
+      # --- 6 tiêu chí chấm điểm ---
+      # Mỗi tiêu chí là 1 step riêng, dùng autograding-command-grader.
+      # Pass = nhận đủ điểm; Fail = 0 điểm cho tiêu chí đó.
+
+      - name: "UPDATE-1: Trả về 200 + body đúng (2 điểm)"
+        id: t1
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "UPDATE-1: 200 + body đúng"
+          setup-command: ""
+          command: "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#updateShouldReturn200WithUpdatedBody test"
+          timeout: 10
+          max-score: 2
+
+      - name: "UPDATE-2: Lưu thật vào DB (2 điểm)"
+        id: t2
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "UPDATE-2: Lưu thật vào DB"
+          setup-command: ""
+          command: "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#updateShouldPersistChangesToDatabase test"
+          timeout: 10
+          max-score: 2
+
+      - name: "UPDATE-3: 404 khi không tồn tại (1 điểm)"
+        id: t3
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "UPDATE-3: 404 khi không tồn tại"
+          setup-command: ""
+          command: "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#updateShouldReturn404WhenProductNotFound test"
+          timeout: 10
+          max-score: 1
+
+      - name: "DELETE-1: Trả về 204/200 (2 điểm)"
+        id: t4
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "DELETE-1: Trả về 204/200"
+          setup-command: ""
+          command: "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#deleteShouldReturnNoContent test"
+          timeout: 10
+          max-score: 2
+
+      - name: "DELETE-2: Xoá khỏi DB (2 điểm)"
+        id: t5
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "DELETE-2: Xoá khỏi DB"
+          setup-command: ""
+          command: "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#deleteShouldRemoveProductFromDatabase test"
+          timeout: 10
+          max-score: 2
+
+      - name: "DELETE-3: 404 khi không tồn tại (1 điểm)"
+        id: t6
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "DELETE-3: 404 khi không tồn tại"
+          setup-command: ""
+          command: "cd product-service && ./mvnw -q -Dtest=ProductUpdateDeleteGradingTests#deleteShouldReturn404WhenProductNotFound test"
+          timeout: 10
+          max-score: 1
+
+      # --- Tổng hợp điểm hiển thị trên Classroom dashboard ---
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          T1_RESULTS: "${{ steps.t1.outputs.result }}"
+          T2_RESULTS: "${{ steps.t2.outputs.result }}"
+          T3_RESULTS: "${{ steps.t3.outputs.result }}"
+          T4_RESULTS: "${{ steps.t4.outputs.result }}"
+          T5_RESULTS: "${{ steps.t5.outputs.result }}"
+          T6_RESULTS: "${{ steps.t6.outputs.result }}"
+        with:
+          runners: t1,t2,t3,t4,t5,t6
+
+      # --- Tải lên file báo cáo grading-report.txt để xem chi tiết ---
+      - name: Upload grading reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grading-report
+          path: product-service/target/grading-report.*
+          if-no-files-found: ignore
