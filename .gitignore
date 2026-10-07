@@ -40,3 +40,5 @@ CLAUDE.md
 
 ### MySQL bind-mount data volume (generated, local-only) ###
 **/docker/mysql/data/
+
+**/Slot 9/ShoppingServices/api-gateway/volume-data/**
