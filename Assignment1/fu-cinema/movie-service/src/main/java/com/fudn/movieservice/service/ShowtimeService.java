@@ -4,11 +4,18 @@ import com.fudn.movieservice.dto.ShowtimeRequest;
 import com.fudn.movieservice.dto.ShowtimeResponse;
 import com.fudn.movieservice.exception.ApiException;
 import com.fudn.movieservice.model.*;
+import com.fudn.movieservice.repository.MovieRepository;
+import com.fudn.movieservice.repository.RoomRepository;
 import com.fudn.movieservice.repository.ShowtimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +25,21 @@ public class ShowtimeService {
     private static final String NO_EXCLUDE = "";
 
     private final ShowtimeRepository showtimeRepository;
+    private final MovieRepository movieRepository;
+    private final RoomRepository roomRepository;
     private final MovieService movieService;
     private final RoomService roomService;
+
+    /** Filter by movieId and/or show date */
+    public List<ShowtimeResponse> search(String movieId, LocalDate date) {
+        List<Showtime> showtimes = (movieId == null || movieId.isBlank())
+                ? showtimeRepository.findAllByOrderByStartTimeAsc()
+                : showtimeRepository.findByMovieIdOrderByStartTimeAsc(movieId);
+        List<Showtime> filtered = showtimes.stream()
+                .filter(s -> date == null || s.getStartTime().toLocalDate().equals(date))
+                .toList();
+        return toResponses(filtered);
+    }
 
     public ShowtimeResponse getById(String id) {
         Showtime s = find(id);
@@ -38,6 +58,13 @@ public class ShowtimeService {
             throw ApiException.badRequest("Cannot update a cancelled showtime");
         }
         return apply(showtime, request, id);
+    }
+
+    /** BR06: soft delete - the showtime is kept but marked CANCELLED */
+    public void cancel(String id) {
+        Showtime showtime = find(id);
+        showtime.setShowtimeStatus(ShowtimeStatus.CANCELLED);
+        showtimeRepository.save(showtime);
     }
 
     private Showtime find(String id) {
@@ -76,5 +103,18 @@ public class ShowtimeService {
         showtime.setEndTime(endTime);
         showtime.setTicketPrice(request.ticketPrice());
         return ShowtimeResponse.from(showtimeRepository.save(showtime), movie, room);
+    }
+
+    /** Application-side join for lists: load the related movies and rooms with two findAllById queries */
+    private List<ShowtimeResponse> toResponses(List<Showtime> showtimes) {
+        Map<String, Movie> movies = movieRepository
+                .findAllById(showtimes.stream().map(Showtime::getMovieId).distinct().toList())
+                .stream().collect(Collectors.toMap(Movie::getMovieId, Function.identity()));
+        Map<String, CinemaRoom> rooms = roomRepository
+                .findAllById(showtimes.stream().map(Showtime::getRoomId).distinct().toList())
+                .stream().collect(Collectors.toMap(CinemaRoom::getRoomId, Function.identity()));
+        return showtimes.stream()
+                .map(s -> ShowtimeResponse.from(s, movies.get(s.getMovieId()), rooms.get(s.getRoomId())))
+                .toList();
     }
 }
