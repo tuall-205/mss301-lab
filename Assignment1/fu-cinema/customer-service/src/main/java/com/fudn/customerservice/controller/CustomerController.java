@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor
@@ -40,5 +42,33 @@ public class CustomerController {
     public void changePassword(@RequestHeader(USER_ID) Long userId,
                                @Valid @RequestBody ChangePasswordRequest request) {
         customerService.changePassword(userId, request);
+    }
+
+    // ---------- ADMIN ----------
+    @GetMapping
+    public List<CustomerResponse> search(@RequestParam(required = false) String keyword) {
+        return customerService.search(keyword);
+    }
+
+    @GetMapping("/{id}")
+    public CustomerResponse getById(@PathVariable Long id) {
+        return customerService.getById(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public CustomerResponse create(@Valid @RequestBody AdminCustomerRequest request) {
+        return customerService.create(request);
+    }
+
+    @PutMapping("/{id}")
+    public CustomerResponse update(@PathVariable Long id, @Valid @RequestBody AdminCustomerRequest request) {
+        return customerService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        customerService.delete(id);
     }
 }
