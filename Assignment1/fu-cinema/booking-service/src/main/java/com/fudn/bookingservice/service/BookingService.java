@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -132,6 +133,40 @@ public class BookingService {
         }
         booking.setBookingStatus(BookingStatus.CANCELLED);
         return BookingResponse.from(bookingRepository.save(booking));
+    }
+
+    // ======================= F9: REPORT =======================
+
+    public ReportResponse report(LocalDate startDate, LocalDate endDate) {
+        if (startDate.isAfter(endDate)) {                                    // BR13
+            throw ApiException.badRequest("startDate must be before or equal to endDate");
+        }
+        List<Booking> bookings = bookingRepository.findForReport(BookingStatus.CONFIRMED,
+                startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        long totalTickets = 0;
+        Map<String, MovieRevenueResponse> byMovie = new HashMap<>();
+
+        for (Booking b : bookings) {
+            totalRevenue = totalRevenue.add(b.getTotalPrice());
+            totalTickets += b.getDetails().size();
+            for (BookingDetail d : b.getDetails()) {
+                byMovie.merge(d.getMovieId(),
+                        new MovieRevenueResponse(d.getMovieId(), d.getMovieTitle(), 1, d.getPrice()),
+                        (a, c) -> new MovieRevenueResponse(a.movieId(), a.movieTitle(),
+                                a.ticketsSold() + c.ticketsSold(), a.revenue().add(c.revenue())));
+            }
+        }
+
+        // Descending by revenue, ties broken by tickets sold
+        List<MovieRevenueResponse> revenueByMovie = byMovie.values().stream()
+                .sorted(Comparator.comparing(MovieRevenueResponse::revenue).reversed()
+                        .thenComparing(Comparator.comparingLong(MovieRevenueResponse::ticketsSold).reversed()))
+                .toList();
+
+        return new ReportResponse(startDate, endDate, bookings.size(), totalTickets, totalRevenue,
+                revenueByMovie, bookings.stream().map(BookingResponse::from).toList()); // already DESC from the query
     }
 
     // ======================= HELPER =======================
