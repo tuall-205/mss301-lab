@@ -4,7 +4,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: cinema-sqlserver
     ports:
-      - "1433:1433"
+      - "14330:1433"   # host 1433/1434 are used by the local MSSQLSERVER service
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Fucinema@2026"
