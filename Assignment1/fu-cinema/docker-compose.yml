@@ -47,7 +47,7 @@ services:
     image: mysql:8.3.0
     container_name: cinema-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"   # host 3306 is taken by local MySQL80 service
     environment:
       MYSQL_ROOT_PASSWORD: mysql
     volumes:
