@@ -35,10 +35,11 @@ Thumbs.db
 ### Local-only notes ###
 CLAUDE.md
 
-### Postman collections/environments (generated, local-only) ###
-**/postman/
 
 ### MySQL bind-mount data volume (generated, local-only) ###
 **/docker/mysql/data/
 
 **/Slot 9/ShoppingServices/api-gateway/volume-data/**
+
+### Assignment1 container data (generated, local-only) ###
+Assignment1/fu-cinema/docker/
