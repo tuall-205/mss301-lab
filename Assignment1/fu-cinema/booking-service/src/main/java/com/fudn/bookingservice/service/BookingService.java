@@ -115,6 +115,25 @@ public class BookingService {
         return BookingResponse.from(findAccessible(bookingId, userId, role));
     }
 
+    @Transactional
+    public BookingResponse cancel(Long bookingId, Long userId, String role) {
+        Booking booking = findAccessible(bookingId, userId, role);
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw ApiException.badRequest("Only CONFIRMED bookings can be cancelled");
+        }
+        if (!ROLE_ADMIN.equals(role)) {                                     // BR12
+            LocalDateTime deadline = LocalDateTime.now().plusHours(CANCEL_BEFORE_HOURS);
+            boolean tooLate = booking.getDetails().stream()
+                    .anyMatch(d -> d.getShowtimeStart().isBefore(deadline));
+            if (tooLate) {
+                throw ApiException.badRequest("Booking can only be cancelled at least "
+                        + CANCEL_BEFORE_HOURS + " hours before the showtime");
+            }
+        }
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        return BookingResponse.from(bookingRepository.save(booking));
+    }
+
     // ======================= HELPER =======================
 
     private ShowtimeResponse fetchShowtime(String showtimeId) {
