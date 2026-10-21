@@ -1,0 +1,61 @@
+name: saga-demo
+
+services:
+  # ---------- order-service DB ----------
+  mysql:
+    image: mysql:8.4
+    container_name: saga-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: orderdb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # ---------- payment-service DB ----------
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: saga-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Saga@12345"
+      MSSQL_PID: "Developer"
+    ports:
+      - "14330:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      # Vừa kiểm tra SQL Server sẵn sàng, vừa tạo database paymentdb nếu chưa có
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Saga@12345' -C -Q \"IF DB_ID('paymentdb') IS NULL CREATE DATABASE paymentdb\" || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+
+  # ---------- inventory-service DB ----------
+  mongodb:
+    image: mongo:8.0
+    container_name: saga-mongodb
+    command: ["--replSet", "rs0", "--bind_ip_all"]   # transaction trong MongoDB cần replica set
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Lần đầu: khởi tạo replica set 1 node; healthy khi node đã là PRIMARY
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status() } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}) }; quit(db.hello().isWritablePrimary ? 0 : 1)"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
+
+volumes:
+  mysql-data:
+  mssql-data:
+  mongo-data:
